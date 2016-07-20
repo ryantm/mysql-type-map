@@ -24,6 +24,7 @@ data ColumnType =
   | TinyInt Integer Signed Zerofill
   | SmallInt Integer Signed Zerofill
   | MediumInt Integer Signed Zerofill
+  | MyInt Integer Signed Zerofill
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -34,7 +35,12 @@ parse t =
       Right b -> b
 
 parseTypes :: TokenParsing m => m ColumnType
-parseTypes = bit <|> tinyInt <|> smallInt <|> mediumInt
+parseTypes =
+  bit
+  <|> tinyInt
+  <|> smallInt
+  <|> mediumInt
+  <|> myInt
 
 
 bit :: TokenParsing m => m ColumnType
@@ -50,6 +56,9 @@ smallInt = intType "SMALLINT" SmallInt
 
 mediumInt :: TokenParsing f => f ColumnType
 mediumInt = intType "MEDIUMINT" MediumInt
+
+myInt :: TokenParsing f => f ColumnType
+myInt = intType "INT" MyInt
 
 intType
   :: TokenParsing f =>

@@ -36,6 +36,8 @@ tests = testGroup "Tests" [
     mSZ "SMALLINT" SmallInt
   , testProperty "MEDIUMINT [(m)] [UNSIGNED] [ZEROFILL] gives MediumInt" $
     mSZ "MEDIUMINT" MediumInt
+  , testProperty "INT [(m)] [UNSIGNED] [ZEROFILL] gives MyInt" $
+    mSZ "INT" MyInt
   ]
 
 mSZ n c m s z =
