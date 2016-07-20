@@ -48,7 +48,13 @@ tests = testGroup "Tests" [
     mSZ "BIGINT" BigInt
   -- TODO? SERIAL
   , testProperty "DECIMAL[(m,[d])] [UNSIGNED] [ZEROFILL] gives Decimal" $
-    decimalProp
+    decimalProp "DECIMAL"
+  , testProperty "DEC[(m,[d])] [UNSIGNED] [ZEROFILL] gives Decimal" $
+    decimalProp "DEC"
+  , testProperty "NUMERIC[(m,[d])] [UNSIGNED] [ZEROFILL] gives Decimal" $
+    decimalProp "NUMERIC"
+  , testProperty "FIXED[(m,[d])] [UNSIGNED] [ZEROFILL] gives Decimal" $
+    decimalProp "FIXED"
   ]
 
 mSZ n c m s z =
@@ -68,7 +74,7 @@ mSZ n c m s z =
       in
         parse (pack t) == c mR s z
 
-decimalProp m d s z =
+decimalProp n m d s z =
   let sS = case s of
         Signed -> ""
         Unsigned -> "UNSIGNED"
@@ -89,6 +95,6 @@ decimalProp m d s z =
         Just i -> case m of
           Nothing -> 0
           Just _ -> i
-      t = "DECIMAL " ++ mdS ++ " " ++ sS ++ " " ++ zS
+      t = n ++ " " ++ mdS ++ " " ++ sS ++ " " ++ zS
       in
         parse (pack t) == Decimal mR dR s z

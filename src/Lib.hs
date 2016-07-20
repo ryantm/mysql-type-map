@@ -91,7 +91,11 @@ mType n c =
 
 myDecimal :: TokenParsing f => f ColumnType
 myDecimal = uncurry Decimal <$> (
-  textSymbol "DECIMAL" *>
+  (try (textSymbol "DECIMAL")
+  <|> textSymbol "DEC"
+  <|> textSymbol "NUMERIC"
+  <|> textSymbol "FIXED")
+  *>
   option (10,0) (
       parens (
           (,) <$>
