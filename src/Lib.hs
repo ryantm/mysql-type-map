@@ -26,6 +26,7 @@ data ColumnType =
   | MediumInt Integer Signed Zerofill
   | MyInt Integer Signed Zerofill
   | BigInt Integer Signed Zerofill
+  | Decimal Integer Integer Signed Zerofill
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -45,6 +46,7 @@ parseTypes = try $
   <|> try myInt
   <|> try myInteger
   <|> try bigInt
+  <|> try myDecimal
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -52,7 +54,7 @@ bit =
   option (Bit 1) (Bit <$> parens integer)
 
 tinyInt :: TokenParsing f => f ColumnType
-tinyInt = intType "TINYINT" TinyInt
+tinyInt = mType "TINYINT" TinyInt
 
 bool :: TokenParsing f => f ColumnType
 bool = textSymbol "BOOL" *>
@@ -60,29 +62,42 @@ bool = textSymbol "BOOL" *>
   pure (TinyInt 1 Signed NoZerofill)
 
 smallInt :: TokenParsing f => f ColumnType
-smallInt = intType "SMALLINT" SmallInt
+smallInt = mType "SMALLINT" SmallInt
 
 mediumInt :: TokenParsing f => f ColumnType
-mediumInt = intType "MEDIUMINT" MediumInt
+mediumInt = mType "MEDIUMINT" MediumInt
 
 myInt :: TokenParsing f => f ColumnType
-myInt = intType "INT" MyInt
+myInt = mType "INT" MyInt
 
 myInteger :: TokenParsing f => f ColumnType
-myInteger = intType "INTEGER" MyInt
+myInteger = mType "INTEGER" MyInt
 
 bigInt :: TokenParsing f => f ColumnType
-bigInt = intType "BIGINT" BigInt
+bigInt = mType "BIGINT" BigInt
 
-intType
+mType
   :: TokenParsing f =>
      Text
   -> (Integer -> Signed -> Zerofill -> ColumnType)
   -> f ColumnType
-intType n c =
+mType n c =
   c <$> (
   textSymbol n *>
   option 1 (parens integer)) <*>
+  option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
+  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
+  eof
+
+myDecimal :: TokenParsing f => f ColumnType
+myDecimal = uncurry Decimal <$> (
+  textSymbol "DECIMAL" *>
+  option (10,0) (
+      parens (
+          (,) <$>
+          integer <*>
+          option 0 (comma *>
+                    integer)))) <*>
   option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
   option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
   eof

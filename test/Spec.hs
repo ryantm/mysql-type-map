@@ -30,23 +30,25 @@ tests = testGroup "Tests" [
           t = "BIT " ++ mS
       in
         parse (pack t) == Bit mR
-  , testProperty "TINYINT [(m)] [UNSIGNED] [ZEROFILL] gives TinyInt" $
+  , testProperty "TINYINT[(m)] [UNSIGNED] [ZEROFILL] gives TinyInt" $
     mSZ "TINYINT" TinyInt
   , testCase "BOOL gives TinyInt 1 Signed NoZerofill" $
     parse "BOOL" @?= TinyInt 1 Signed NoZerofill
   , testCase "BOOLEAN gives TinyInt 1 Signed NoZerofill" $
     parse "BOOLEAN" @?= TinyInt 1 Signed NoZerofill
-  , testProperty "SMALLINT [(m)] [UNSIGNED] [ZEROFILL] gives SmallInt" $
+  , testProperty "SMALLINT[(m)] [UNSIGNED] [ZEROFILL] gives SmallInt" $
     mSZ "SMALLINT" SmallInt
-  , testProperty "MEDIUMINT [(m)] [UNSIGNED] [ZEROFILL] gives MediumInt" $
+  , testProperty "MEDIUMINT[(m)] [UNSIGNED] [ZEROFILL] gives MediumInt" $
     mSZ "MEDIUMINT" MediumInt
-  , testProperty "INT [(m)] [UNSIGNED] [ZEROFILL] gives MyInt" $
+  , testProperty "INT[(m)] [UNSIGNED] [ZEROFILL] gives MyInt" $
     mSZ "INT" MyInt
-  , testProperty "INTEGER [(m)] [UNSIGNED] [ZEROFILL] gives MyInt" $
+  , testProperty "INTEGER[(m)] [UNSIGNED] [ZEROFILL] gives MyInt" $
     mSZ "INTEGER" MyInt
-  , testProperty "BIGINT [(m)] [UNSIGNED] [ZEROFILL] gives BigInt" $
+  , testProperty "BIGINT[(m)] [UNSIGNED] [ZEROFILL] gives BigInt" $
     mSZ "BIGINT" BigInt
   -- TODO? SERIAL
+  , testProperty "DECIMAL[(m,[d])] [UNSIGNED] [ZEROFILL] gives Decimal" $
+    decimalProp
   ]
 
 mSZ n c m s z =
@@ -65,3 +67,28 @@ mSZ n c m s z =
       t = n ++ " " ++ mS ++ " " ++ sS ++ " " ++ zS
       in
         parse (pack t) == c mR s z
+
+decimalProp m d s z =
+  let sS = case s of
+        Signed -> ""
+        Unsigned -> "UNSIGNED"
+      zS = case z of
+        NoZerofill -> ""
+        Zerofill -> "ZEROFILL"
+      mdS = case m of
+        Nothing -> ""
+        Just i ->
+          case d of
+            Nothing -> "(" ++ show i ++ ")"
+            Just di -> "(" ++ show i ++ "," ++ show di ++ ")"
+      mR = case m of
+        Nothing -> 10
+        Just i -> i
+      dR = case d of
+        Nothing -> 0
+        Just i -> case m of
+          Nothing -> 0
+          Just _ -> i
+      t = "DECIMAL " ++ mdS ++ " " ++ sS ++ " " ++ zS
+      in
+        parse (pack t) == Decimal mR dR s z
