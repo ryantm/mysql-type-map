@@ -22,6 +22,7 @@ data Zerofill = NoZerofill | Zerofill
 data ColumnType =
   Bit Integer
   | TinyInt Integer Signed Zerofill
+  | SmallInt Integer Signed Zerofill
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -32,7 +33,7 @@ parse t =
       Right b -> b
 
 parseTypes :: TokenParsing m => m ColumnType
-parseTypes = bit <|> tinyInt
+parseTypes = bit <|> tinyInt <|> smallInt
 
 
 bit :: TokenParsing m => m ColumnType
@@ -40,9 +41,20 @@ bit =
   textSymbol "BIT" *>
   option (Bit 1) (Bit <$> parens integer)
 
-tinyInt :: TokenParsing m => m ColumnType
-tinyInt = TinyInt <$> (
-  textSymbol "TINYINT" *>
+tinyInt :: TokenParsing f => f ColumnType
+tinyInt = intType "TINYINT" TinyInt
+
+smallInt :: TokenParsing f => f ColumnType
+smallInt = intType "SMALLINT" SmallInt
+
+intType
+  :: TokenParsing f =>
+     Text
+  -> (Integer -> Signed -> Zerofill -> ColumnType)
+  -> f ColumnType
+intType n c =
+  c <$> (
+  textSymbol n *>
   option 1 (parens integer)) <*>
   option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
   option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
