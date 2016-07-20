@@ -25,6 +25,7 @@ data ColumnType =
   | SmallInt Integer Signed Zerofill
   | MediumInt Integer Signed Zerofill
   | MyInt Integer Signed Zerofill
+  | BigInt Integer Signed Zerofill
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -35,13 +36,15 @@ parse t =
       Right b -> b
 
 parseTypes :: TokenParsing m => m ColumnType
-parseTypes =
-  bit
-  <|> tinyInt
-  <|> smallInt
-  <|> mediumInt
-  <|> myInt
-
+parseTypes = try $
+  try bit
+  <|> try tinyInt
+  <|> try bool
+  <|> try smallInt
+  <|> try mediumInt
+  <|> try myInt
+  <|> try myInteger
+  <|> try bigInt
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -51,6 +54,11 @@ bit =
 tinyInt :: TokenParsing f => f ColumnType
 tinyInt = intType "TINYINT" TinyInt
 
+bool :: TokenParsing f => f ColumnType
+bool = textSymbol "BOOL" *>
+  skipOptional (textSymbol "EAN") *>
+  pure (TinyInt 1 Signed NoZerofill)
+
 smallInt :: TokenParsing f => f ColumnType
 smallInt = intType "SMALLINT" SmallInt
 
@@ -59,6 +67,12 @@ mediumInt = intType "MEDIUMINT" MediumInt
 
 myInt :: TokenParsing f => f ColumnType
 myInt = intType "INT" MyInt
+
+myInteger :: TokenParsing f => f ColumnType
+myInteger = intType "INTEGER" MyInt
+
+bigInt :: TokenParsing f => f ColumnType
+bigInt = intType "BIGINT" BigInt
 
 intType
   :: TokenParsing f =>
@@ -70,4 +84,5 @@ intType n c =
   textSymbol n *>
   option 1 (parens integer)) <*>
   option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
+  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
+  eof

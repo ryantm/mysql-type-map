@@ -32,12 +32,21 @@ tests = testGroup "Tests" [
         parse (pack t) == Bit mR
   , testProperty "TINYINT [(m)] [UNSIGNED] [ZEROFILL] gives TinyInt" $
     mSZ "TINYINT" TinyInt
+  , testCase "BOOL gives TinyInt 1 Signed NoZerofill" $
+    parse "BOOL" @?= TinyInt 1 Signed NoZerofill
+  , testCase "BOOLEAN gives TinyInt 1 Signed NoZerofill" $
+    parse "BOOLEAN" @?= TinyInt 1 Signed NoZerofill
   , testProperty "SMALLINT [(m)] [UNSIGNED] [ZEROFILL] gives SmallInt" $
     mSZ "SMALLINT" SmallInt
   , testProperty "MEDIUMINT [(m)] [UNSIGNED] [ZEROFILL] gives MediumInt" $
     mSZ "MEDIUMINT" MediumInt
   , testProperty "INT [(m)] [UNSIGNED] [ZEROFILL] gives MyInt" $
     mSZ "INT" MyInt
+  , testProperty "INTEGER [(m)] [UNSIGNED] [ZEROFILL] gives MyInt" $
+    mSZ "INTEGER" MyInt
+  , testProperty "BIGINT [(m)] [UNSIGNED] [ZEROFILL] gives BigInt" $
+    mSZ "BIGINT" BigInt
+  -- TODO? SERIAL
   ]
 
 mSZ n c m s z =
