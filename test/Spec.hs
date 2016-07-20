@@ -10,14 +10,41 @@ import Data.Text
 main :: IO ()
 main = defaultMain tests
 
+
+instance Arbitrary Signed where
+  arbitrary = elements [Signed, Unsigned]
+
+instance Arbitrary Zerofill where
+  arbitrary = elements [NoZerofill, Zerofill]
+
 tests :: TestTree
 tests = testGroup "Tests" [
-    testCase "BIT gives Bit 1" $
-      parse (pack ("BIT")) @?= Bit 1
-  , testProperty "BIT (m) gives Bit m" $
+    testProperty "BIT [(m)] gives Bit" $
     \ m ->
-      (parse (pack ("BIT (" ++ show m ++ ")"))) == Bit (m :: Integer)
-  , testProperty "TINYINT (m) gives TinyInt m Signed NoZerofill" $
-    \ m ->
-      (parse (pack ("TINYINT (" ++ show m ++ ")"))) == TinyInt (m :: Integer) Signed NoZerofill
+      let mS = case m of
+                 Nothing -> ""
+                 Just i -> "(" ++ show i ++ ")"
+          mR = case m of
+                 Nothing -> 1
+                 Just i -> i
+          t = "BIT " ++ mS
+      in
+        parse (pack t) == Bit mR
+  , testProperty "TINYINT [(m)] [UNSIGNED] [ZEROFILL] gives TinyInt" $
+    \ m s z ->
+      let sS = case s of
+                 Signed -> ""
+                 Unsigned -> "UNSIGNED"
+          zS = case z of
+                 NoZerofill -> ""
+                 Zerofill -> "ZEROFILL"
+          mS = case m of
+                 Nothing -> ""
+                 Just i -> "(" ++ show i ++ ")"
+          mR = case m of
+                 Nothing -> 1
+                 Just i -> i
+          t = "TINYINT " ++ mS ++ " " ++ sS ++ " " ++ zS
+      in
+        parse (pack t) == TinyInt mR s z
   ]
