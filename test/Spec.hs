@@ -78,6 +78,10 @@ dateTimeTests = testGroup "Date/Time" [
       parse "DATE" @?= Date
   , testProperty "DATETIME[(fsp)] gives DateTime fsp" $
     fspProp "DATETIME" DateTime
+  , testProperty "TIMESTAMP[(fsp)] gives Timestamp fsp" $
+    fspProp "TIMESTAMP" Timestamp
+  , testProperty "TIME[(fsp)] gives Time fsp" $
+    fspProp "TIME" Time
   ]
 
 mSZ n c m s z =

@@ -31,6 +31,8 @@ data ColumnType =
   | MyDouble (Maybe Integer) (Maybe Integer) Signed Zerofill
   | Date
   | DateTime Integer
+  | Timestamp Integer
+  | Time Integer
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -56,6 +58,8 @@ parseTypes = try $
   <|> try pFloat
   <|> try date
   <|> try dateTime
+  <|> try timestamp
+  <|> try time
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -158,6 +162,12 @@ date = textSymbol "DATE" *> pure Date <* eof
 
 dateTime :: TokenParsing f => f ColumnType
 dateTime = fspType "DATETIME" DateTime
+
+timestamp :: TokenParsing f => f ColumnType
+timestamp = fspType "TIMESTAMP" Timestamp
+
+time :: TokenParsing f => f ColumnType
+time = fspType "TIME" Time
 
 fspType :: TokenParsing f =>
            Text
