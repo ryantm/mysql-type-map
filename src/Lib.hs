@@ -29,6 +29,7 @@ data ColumnType =
   | Decimal Integer Integer Signed Zerofill
   | MyFloat (Maybe Integer) (Maybe Integer) Signed Zerofill
   | MyDouble (Maybe Integer) (Maybe Integer) Signed Zerofill
+  | Date
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -52,6 +53,7 @@ parseTypes = try $
   <|> try myFloat
   <|> try myDouble
   <|> try pFloat
+  <|> try date
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -148,3 +150,6 @@ pFloat = do
     option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
     option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
     eof
+
+date :: TokenParsing f => f ColumnType
+date = textSymbol "DATE" *> pure Date <* eof

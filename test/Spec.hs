@@ -18,7 +18,10 @@ instance Arbitrary Zerofill where
   arbitrary = elements [NoZerofill, Zerofill]
 
 tests :: TestTree
-tests = testGroup "Tests" [
+tests = testGroup "Tests" [numericTests, dateTimeTests]
+
+numericTests :: TestTree
+numericTests = testGroup "Numeric" [
     testProperty "BIT [(m)] gives Bit" $
     \ m ->
       let mS = case m of
@@ -66,7 +69,15 @@ tests = testGroup "Tests" [
   -- TODO: Handle REAL_AS_FLOAT option
   , testProperty "FLOAT(p) [UNSIGNED] [ZEROFILL] gives MyFloat or Double" $
     pFloatProp
+  , testProperty "FLOAT(p) [UNSIGNED] [ZEROFILL] gives MyFloat or Double" $
+    pFloatProp
   ]
+
+dateTimeTests :: TestTree
+dateTimeTests = testGroup "Date/Time" [
+    testCase "DATE gives Date" $
+      parse "DATE" @?= Date
+    ]
 
 mSZ n c m s z =
   let sS = case s of
