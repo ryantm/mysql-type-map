@@ -44,7 +44,7 @@ parse t =
       Right b -> b
 
 parseTypes :: (TokenParsing m, Monad m) => m ColumnType
-parseTypes = try $
+parseTypes =
   try bit
   <|> try tinyInt
   <|> try bool
