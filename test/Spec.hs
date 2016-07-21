@@ -70,8 +70,6 @@ numericTests = testGroup "Numeric" [
   -- TODO: Handle REAL_AS_FLOAT option
   , testProperty "FLOAT(p) [UNSIGNED] [ZEROFILL] gives MyFloat or Double" $
     pFloatProp
-  , testProperty "FLOAT(p) [UNSIGNED] [ZEROFILL] gives MyFloat or Double" $
-    pFloatProp
   ]
 
 dateTimeTests :: TestTree
