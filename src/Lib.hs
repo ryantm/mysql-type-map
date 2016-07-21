@@ -43,25 +43,28 @@ parse t =
       Left e -> error (show e)
       Right b -> b
 
+tryEof :: (TokenParsing m, Monad m) => m a -> m a
+tryEof p = try (p <* eof)
+
 parseTypes :: (TokenParsing m, Monad m) => m ColumnType
 parseTypes =
-  try bit
-  <|> try tinyInt
-  <|> try bool
-  <|> try smallInt
-  <|> try mediumInt
-  <|> try myInt
-  <|> try myInteger
-  <|> try bigInt
-  <|> try myDecimal
-  <|> try myFloat
-  <|> try myDouble
-  <|> try pFloat
-  <|> try date
-  <|> try dateTime
-  <|> try timestamp
-  <|> try time
-  <|> try year
+  tryEof bit
+  <|> tryEof tinyInt
+  <|> tryEof bool
+  <|> tryEof smallInt
+  <|> tryEof mediumInt
+  <|> tryEof myInt
+  <|> tryEof myInteger
+  <|> tryEof bigInt
+  <|> tryEof myDecimal
+  <|> tryEof myFloat
+  <|> myDouble
+  <|> tryEof pFloat
+  <|> tryEof date
+  <|> tryEof dateTime
+  <|> tryEof timestamp
+  <|> tryEof time
+  <|> tryEof year
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -101,8 +104,7 @@ mType n c =
   textSymbol n *>
   option 1 (parens integer)) <*>
   option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
-  eof
+  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
 
 myDecimal :: TokenParsing f => f ColumnType
 myDecimal = uncurry Decimal <$> (
@@ -118,17 +120,16 @@ myDecimal = uncurry Decimal <$> (
           option 0 (comma *>
                     integer)))) <*>
   option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
-  eof
+  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
 
 myFloat :: TokenParsing f => f ColumnType
 myFloat = myFloatOrDouble "FLOAT" MyFloat
 
-myDouble :: TokenParsing f => f ColumnType
+myDouble :: (TokenParsing f, Monad f) => f ColumnType
 myDouble =
-  try (myFloatOrDouble "DOUBLE" MyDouble)
-  <|>   try (myFloatOrDouble "DOUBLE PRECISION" MyDouble)
-  <|>   try (myFloatOrDouble "REAL" MyDouble)
+  tryEof (myFloatOrDouble "DOUBLE" MyDouble)
+  <|> tryEof (myFloatOrDouble "DOUBLE PRECISION" MyDouble)
+  <|> tryEof (myFloatOrDouble "REAL" MyDouble)
 
 myFloatOrDouble :: TokenParsing f =>
      Text
@@ -144,8 +145,7 @@ myFloatOrDouble n c = uncurry c <$> (
             comma <*>
             (Just <$> integer)))) <*>
   option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
-  eof
+  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
 
 pFloat :: (TokenParsing f, Monad f) => f ColumnType
 pFloat = do
@@ -156,11 +156,10 @@ pFloat = do
    else
      MyDouble Nothing Nothing) <$>
     option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-    option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
-    eof
+    option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
 
 date :: TokenParsing f => f ColumnType
-date = textSymbol "DATE" *> pure Date <* eof
+date = textSymbol "DATE" *> pure Date
 
 dateTime :: TokenParsing f => f ColumnType
 dateTime = fspType "DATETIME" DateTime 0
@@ -182,5 +181,4 @@ fspType :: TokenParsing f =>
 fspType n c d =
   c <$> (
   textSymbol n *>
-  option d (parens integer)) <*
-  eof
+  option d (parens integer))
