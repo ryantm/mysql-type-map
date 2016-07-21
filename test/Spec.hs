@@ -77,11 +77,13 @@ dateTimeTests = testGroup "Date/Time" [
     testCase "DATE gives Date" $
       parse "DATE" @?= Date
   , testProperty "DATETIME[(fsp)] gives DateTime fsp" $
-    fspProp "DATETIME" DateTime
+    fspProp "DATETIME" DateTime 0
   , testProperty "TIMESTAMP[(fsp)] gives Timestamp fsp" $
-    fspProp "TIMESTAMP" Timestamp
+    fspProp "TIMESTAMP" Timestamp 0
   , testProperty "TIME[(fsp)] gives Time fsp" $
-    fspProp "TIME" Time
+    fspProp "TIME" Time 0
+  , testProperty "YEAR[(4)] gives Time 4" $
+    fspProp "YEAR" Year 4
   ]
 
 mSZ n c m s z =
@@ -158,13 +160,12 @@ pFloatProp p s z =
       in
         parse (pack t) == c Nothing Nothing s z
 
-fspProp :: Text -> (Integer -> ColumnType) -> Maybe Integer -> Bool
-fspProp n c fsp =
+fspProp n c d fsp =
   let fspS = case fsp of
         Nothing -> ""
         Just i -> "(" <> pack (show i) <> ")"
       fspR = case fsp of
-        Nothing -> 0
+        Nothing -> d
         Just i -> i
       t = n <> fspS
       in

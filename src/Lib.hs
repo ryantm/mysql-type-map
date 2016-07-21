@@ -33,6 +33,7 @@ data ColumnType =
   | DateTime Integer
   | Timestamp Integer
   | Time Integer
+  | Year Integer
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -60,6 +61,7 @@ parseTypes = try $
   <|> try dateTime
   <|> try timestamp
   <|> try time
+  <|> try year
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -161,20 +163,24 @@ date :: TokenParsing f => f ColumnType
 date = textSymbol "DATE" *> pure Date <* eof
 
 dateTime :: TokenParsing f => f ColumnType
-dateTime = fspType "DATETIME" DateTime
+dateTime = fspType "DATETIME" DateTime 0
 
 timestamp :: TokenParsing f => f ColumnType
-timestamp = fspType "TIMESTAMP" Timestamp
+timestamp = fspType "TIMESTAMP" Timestamp 0
 
 time :: TokenParsing f => f ColumnType
-time = fspType "TIME" Time
+time = fspType "TIME" Time 0
+
+year :: TokenParsing f => f ColumnType
+year = fspType "YEAR" Year 4
 
 fspType :: TokenParsing f =>
            Text
         -> (Integer -> ColumnType)
+        -> Integer
         -> f ColumnType
-fspType n c =
+fspType n c d =
   c <$> (
   textSymbol n *>
-  option 0 (parens integer)) <*
+  option d (parens integer)) <*
   eof
