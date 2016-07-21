@@ -28,6 +28,7 @@ data ColumnType =
   | BigInt Integer Signed Zerofill
   | Decimal Integer Integer Signed Zerofill
   | MyFloat (Maybe Integer) (Maybe Integer) Signed Zerofill
+  | MyDouble (Maybe Integer) (Maybe Integer) Signed Zerofill
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -37,7 +38,7 @@ parse t =
       Left e -> error (show e)
       Right b -> b
 
-parseTypes :: TokenParsing m => m ColumnType
+parseTypes :: (TokenParsing m, Monad m) => m ColumnType
 parseTypes = try $
   try bit
   <|> try tinyInt
@@ -49,6 +50,8 @@ parseTypes = try $
   <|> try bigInt
   <|> try myDecimal
   <|> try myFloat
+  <|> try myDouble
+  <|> try pFloat
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -109,8 +112,20 @@ myDecimal = uncurry Decimal <$> (
   eof
 
 myFloat :: TokenParsing f => f ColumnType
-myFloat = uncurry MyFloat <$> (
-  textSymbol "FLOAT"
+myFloat = myFloatOrDouble "FLOAT" MyFloat
+
+myDouble :: TokenParsing f => f ColumnType
+myDouble =
+  try (myFloatOrDouble "DOUBLE" MyDouble)
+  <|>   try (myFloatOrDouble "DOUBLE PRECISION" MyDouble)
+  <|>   try (myFloatOrDouble "REAL" MyDouble)
+
+myFloatOrDouble :: TokenParsing f =>
+     Text
+  -> (Maybe Integer -> Maybe Integer -> Signed -> Zerofill -> ColumnType)
+  -> f ColumnType
+myFloatOrDouble n c = uncurry c <$> (
+  textSymbol n
   *>
   option (Nothing,Nothing) (
       parens (
@@ -121,3 +136,15 @@ myFloat = uncurry MyFloat <$> (
   option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
   option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
   eof
+
+pFloat :: (TokenParsing f, Monad f) => f ColumnType
+pFloat = do
+  textSymbol "FLOAT"
+  i <- parens integer
+  (if i < 25 then
+     MyFloat Nothing Nothing
+   else
+     MyDouble Nothing Nothing) <$>
+    option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
+    option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
+    eof

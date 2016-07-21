@@ -56,7 +56,16 @@ tests = testGroup "Tests" [
   , testProperty "FIXED[(m,[d])] [UNSIGNED] [ZEROFILL] gives Decimal" $
     decimalProp "FIXED"
   , testProperty "FLOAT[(m,d)] [UNSIGNED] [ZEROFILL] gives MyFloat" $
-    floatProp
+    floatOrDoubleProp "FLOAT" MyFloat
+  , testProperty "DOUBLE[(m,d)] [UNSIGNED] [ZEROFILL] gives MyFloat" $
+    floatOrDoubleProp "DOUBLE" MyDouble
+  , testProperty "DOUBLE PRECISION[(m,d)] [UNSIGNED] [ZEROFILL] gives MyFloat" $
+    floatOrDoubleProp "DOUBLE PRECISION" MyDouble
+  , testProperty "REAL[(m,d)] [UNSIGNED] [ZEROFILL] gives MyFloat" $
+    floatOrDoubleProp "REAL" MyDouble
+  -- TODO: Handle REAL_AS_FLOAT option
+  , testProperty "FLOAT(p) [UNSIGNED] [ZEROFILL] gives MyFloat or Double" $
+    pFloatProp
   ]
 
 mSZ n c m s z =
@@ -101,7 +110,7 @@ decimalProp n m d s z =
       in
         parse (pack t) == Decimal mR dR s z
 
-floatProp md s z =
+floatOrDoubleProp n c md s z =
   let sS = case s of
         Signed -> ""
         Unsigned -> "UNSIGNED"
@@ -114,6 +123,21 @@ floatProp md s z =
       (mR, dR) = case md of
         Nothing -> (Nothing, Nothing)
         Just (m, d) -> (Just m, Just d)
-      t = "FLOAT " ++ mdS ++ " " ++ sS ++ " " ++ zS
+      t = n ++ " " ++ mdS ++ " " ++ sS ++ " " ++ zS
       in
-        parse (pack t) == MyFloat mR dR s z
+        parse (pack t) == c mR dR s z
+
+pFloatProp p s z =
+  let sS = case s of
+        Signed -> ""
+        Unsigned -> "UNSIGNED"
+      zS = case z of
+        NoZerofill -> ""
+        Zerofill -> "ZEROFILL"
+      c = if (p :: Integer) < 25 then  -- 0 to 24 Float, 25 to 53 Double
+            MyFloat
+          else
+            MyDouble
+      t = "FLOAT(" ++ show p ++ ")" ++ " " ++ sS ++ " " ++ zS
+      in
+        parse (pack t) == c Nothing Nothing s z
