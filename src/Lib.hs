@@ -30,6 +30,7 @@ data ColumnType =
   | MyFloat (Maybe Integer) (Maybe Integer) Signed Zerofill
   | MyDouble (Maybe Integer) (Maybe Integer) Signed Zerofill
   | Date
+  | DateTime Integer
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -54,6 +55,7 @@ parseTypes = try $
   <|> try myDouble
   <|> try pFloat
   <|> try date
+  <|> try dateTime
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -153,3 +155,16 @@ pFloat = do
 
 date :: TokenParsing f => f ColumnType
 date = textSymbol "DATE" *> pure Date <* eof
+
+dateTime :: TokenParsing f => f ColumnType
+dateTime = fspType "DATETIME" DateTime
+
+fspType :: TokenParsing f =>
+           Text
+        -> (Integer -> ColumnType)
+        -> f ColumnType
+fspType n c =
+  c <$> (
+  textSymbol n *>
+  option 0 (parens integer)) <*
+  eof

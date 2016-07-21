@@ -6,6 +6,7 @@ import Test.Tasty.QuickCheck
 
 import Lib
 import Data.Text
+import Data.Monoid
 
 main :: IO ()
 main = defaultMain tests
@@ -77,7 +78,9 @@ dateTimeTests :: TestTree
 dateTimeTests = testGroup "Date/Time" [
     testCase "DATE gives Date" $
       parse "DATE" @?= Date
-    ]
+  , testProperty "DATETIME[(fsp)] gives DateTime fsp" $
+    fspProp "DATETIME" DateTime
+  ]
 
 mSZ n c m s z =
   let sS = case s of
@@ -152,3 +155,15 @@ pFloatProp p s z =
       t = "FLOAT(" ++ show p ++ ")" ++ " " ++ sS ++ " " ++ zS
       in
         parse (pack t) == c Nothing Nothing s z
+
+fspProp :: Text -> (Integer -> ColumnType) -> Maybe Integer -> Bool
+fspProp n c fsp =
+  let fspS = case fsp of
+        Nothing -> ""
+        Just i -> "(" <> pack (show i) <> ")"
+      fspR = case fsp of
+        Nothing -> 0
+        Just i -> i
+      t = n <> fspS
+      in
+        parse t == c fspR
