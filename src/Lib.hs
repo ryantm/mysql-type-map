@@ -94,6 +94,13 @@ myInteger = mType "INTEGER" MyInt
 bigInt :: TokenParsing f => f ColumnType
 bigInt = mType "BIGINT" BigInt
 
+unsigned :: TokenParsing f => f Signed
+unsigned = option Signed (textSymbol "UNSIGNED" *> pure Unsigned)
+
+zerofill :: TokenParsing f => f Zerofill
+zerofill = option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
+
+
 mType
   :: TokenParsing f =>
      Text
@@ -102,9 +109,7 @@ mType
 mType n c =
   c <$> (
   textSymbol n *>
-  option 1 (parens integer)) <*>
-  option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
+  option 1 (parens integer)) <*> unsigned <*> zerofill
 
 myDecimal :: TokenParsing f => f ColumnType
 myDecimal = uncurry Decimal <$> (
@@ -118,9 +123,7 @@ myDecimal = uncurry Decimal <$> (
           (,) <$>
           integer <*>
           option 0 (comma *>
-                    integer)))) <*>
-  option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
+                    integer)))) <*> unsigned <*> zerofill
 
 myFloat :: TokenParsing f => f ColumnType
 myFloat = myFloatOrDouble "FLOAT" MyFloat
@@ -143,9 +146,7 @@ myFloatOrDouble n c = uncurry c <$> (
           (,) <$>
             (Just <$> integer) <*
             comma <*>
-            (Just <$> integer)))) <*>
-  option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
+            (Just <$> integer)))) <*> unsigned <*> zerofill
 
 pFloat :: (TokenParsing f, Monad f) => f ColumnType
 pFloat = do
@@ -154,9 +155,7 @@ pFloat = do
   (if i < 25 then
      MyFloat Nothing Nothing
    else
-     MyDouble Nothing Nothing) <$>
-    option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
-    option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill)
+     MyDouble Nothing Nothing) <$> unsigned <*> zerofill
 
 date :: TokenParsing f => f ColumnType
 date = textSymbol "DATE" *> pure Date
