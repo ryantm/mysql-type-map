@@ -19,7 +19,7 @@ instance Arbitrary Zerofill where
   arbitrary = elements [NoZerofill, Zerofill]
 
 tests :: TestTree
-tests = testGroup "Tests" [numericTests, dateTimeTests]
+tests = testGroup "Tests" [numericTests, dateTimeTests, stringTests]
 
 numericTests :: TestTree
 numericTests = testGroup "Numeric" [
@@ -85,6 +85,9 @@ dateTimeTests = testGroup "Date/Time" [
   , testProperty "YEAR[(4)] gives Time 4" $
     fspProp "YEAR" Year 4
   ]
+
+stringTests :: TestTree
+stringTests = testGroup "String" []
 
 mSZ n c m s z =
   let sS = case s of
