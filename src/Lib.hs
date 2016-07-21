@@ -27,6 +27,7 @@ data ColumnType =
   | MyInt Integer Signed Zerofill
   | BigInt Integer Signed Zerofill
   | Decimal Integer Integer Signed Zerofill
+  | MyFloat (Maybe Integer) (Maybe Integer) Signed Zerofill
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -47,6 +48,7 @@ parseTypes = try $
   <|> try myInteger
   <|> try bigInt
   <|> try myDecimal
+  <|> try myFloat
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -102,6 +104,20 @@ myDecimal = uncurry Decimal <$> (
           integer <*>
           option 0 (comma *>
                     integer)))) <*>
+  option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
+  option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
+  eof
+
+myFloat :: TokenParsing f => f ColumnType
+myFloat = uncurry MyFloat <$> (
+  textSymbol "FLOAT"
+  *>
+  option (Nothing,Nothing) (
+      parens (
+          (,) <$>
+            (Just <$> integer) <*
+            comma <*>
+            (Just <$> integer)))) <*>
   option Signed (textSymbol "UNSIGNED" *> pure Unsigned) <*>
   option NoZerofill (textSymbol "ZEROFILL" *> pure Zerofill) <*
   eof

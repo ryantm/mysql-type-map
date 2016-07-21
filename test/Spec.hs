@@ -55,6 +55,8 @@ tests = testGroup "Tests" [
     decimalProp "NUMERIC"
   , testProperty "FIXED[(m,[d])] [UNSIGNED] [ZEROFILL] gives Decimal" $
     decimalProp "FIXED"
+  , testProperty "FLOAT[(m,d)] [UNSIGNED] [ZEROFILL] gives MyFloat" $
+    floatProp
   ]
 
 mSZ n c m s z =
@@ -98,3 +100,20 @@ decimalProp n m d s z =
       t = n ++ " " ++ mdS ++ " " ++ sS ++ " " ++ zS
       in
         parse (pack t) == Decimal mR dR s z
+
+floatProp md s z =
+  let sS = case s of
+        Signed -> ""
+        Unsigned -> "UNSIGNED"
+      zS = case z of
+        NoZerofill -> ""
+        Zerofill -> "ZEROFILL"
+      mdS = case md of
+        Nothing -> ""
+        Just (m, d) ->"(" ++ show m ++ "," ++ show d ++ ")"
+      (mR, dR) = case md of
+        Nothing -> (Nothing, Nothing)
+        Just (m, d) -> (Just m, Just d)
+      t = "FLOAT " ++ mdS ++ " " ++ sS ++ " " ++ zS
+      in
+        parse (pack t) == MyFloat mR dR s z
