@@ -3,6 +3,7 @@
 import Test.Tasty
 import Test.Tasty.HUnit
 import Test.Tasty.QuickCheck
+import Test.QuickCheck.Instances.Char
 
 import Lib
 import Data.Text
@@ -87,7 +88,11 @@ dateTimeTests = testGroup "Date/Time" [
   ]
 
 stringTests :: TestTree
-stringTests = testGroup "String" []
+stringTests = testGroup "String" [
+  testProperty
+    "[NATIONAL] CHAR[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]"
+    charProp
+  ]
 
 mSZ n c m s z =
   let sS = case s of
@@ -103,8 +108,8 @@ mSZ n c m s z =
         Nothing -> 1
         Just i -> i
       t = n ++ " " ++ mS ++ " " ++ sS ++ " " ++ zS
-      in
-        parse (pack t) == c mR s z
+  in
+    parse (pack t) == c mR s z
 
 decimalProp n m d s z =
   let sS = case s of
@@ -128,8 +133,8 @@ decimalProp n m d s z =
           Nothing -> 0
           Just _ -> i
       t = n ++ " " ++ mdS ++ " " ++ sS ++ " " ++ zS
-      in
-        parse (pack t) == Decimal mR dR s z
+  in
+    parse (pack t) == Decimal mR dR s z
 
 floatOrDoubleProp n c md s z =
   let sS = case s of
@@ -145,8 +150,8 @@ floatOrDoubleProp n c md s z =
         Nothing -> (Nothing, Nothing)
         Just (m, d) -> (Just m, Just d)
       t = n ++ " " ++ mdS ++ " " ++ sS ++ " " ++ zS
-      in
-        parse (pack t) == c mR dR s z
+  in
+    parse (pack t) == c mR dR s z
 
 pFloatProp p s z =
   let sS = case s of
@@ -160,8 +165,8 @@ pFloatProp p s z =
           else
             MyDouble
       t = "FLOAT(" ++ show p ++ ")" ++ " " ++ sS ++ " " ++ zS
-      in
-        parse (pack t) == c Nothing Nothing s z
+  in
+    parse (pack t) == c Nothing Nothing s z
 
 fspProp n c d fsp =
   let fspS = case fsp of
@@ -171,5 +176,42 @@ fspProp n c d fsp =
         Nothing -> d
         Just i -> i
       t = n <> fspS
-      in
-        parse t == c fspR
+  in
+    parse t == c fspR
+
+data NonSpace = NonSpace Text
+  deriving (Eq, Show)
+
+instance Arbitrary NonSpace where
+  arbitrary = do
+    c <- listOf1 nonSpace
+    return (NonSpace (pack c))
+
+instance Arbitrary National where
+  arbitrary = elements [NotNational, National]
+
+charProp national m charset collation =
+  let natS = case national of
+        NotNational -> ""
+        National -> "NATIONAL"
+      mS = case m of
+        Nothing -> ""
+        Just i -> "(" <> pack (show i) <> ")"
+      mR = case m of
+        Nothing -> 1
+        Just i -> i
+      charsetS = case charset of
+        Nothing -> ""
+        Just (NonSpace c) -> "CHARACTER SET " <> c
+      charsetR = case charset of
+        Nothing -> Nothing
+        Just (NonSpace c) -> Just c
+      collationS = case collation of
+        Nothing -> ""
+        Just (NonSpace c) -> "COLLATE " <> c
+      collationR = case collation of
+        Nothing -> Nothing
+        Just (NonSpace c) -> Just c
+      t = natS <> " " <> "CHAR" <> mS <> " " <> charsetS <> " " <> collationS
+  in
+    parse t == MyChar national mR charsetR collationR

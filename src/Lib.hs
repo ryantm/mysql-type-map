@@ -5,6 +5,7 @@ module Lib
     , ColumnType(..)
     , Signed(..)
     , Zerofill(..)
+    , National(..)
     ) where
 
 import Data.Text
@@ -16,7 +17,11 @@ import Control.Applicative ((<|>))
 
 data Signed = Signed | Unsigned
   deriving (Eq, Show)
+
 data Zerofill = NoZerofill | Zerofill
+  deriving (Eq, Show)
+
+data National = NotNational | National
   deriving (Eq, Show)
 
 data ColumnType =
@@ -34,6 +39,7 @@ data ColumnType =
   | Timestamp Integer
   | Time Integer
   | Year Integer
+  | MyChar National Integer (Maybe Text) (Maybe Text)
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
