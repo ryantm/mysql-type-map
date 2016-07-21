@@ -184,8 +184,9 @@ data NonSpace = NonSpace Text
 
 instance Arbitrary NonSpace where
   arbitrary = do
-    c <- listOf1 nonSpace
-    return (NonSpace (pack c))
+    c1 <- elements (['A'..'Z'] <> ['a'..'z'] <> ['_'])
+    rest <- listOf (elements (['A'..'Z'] <> ['a'..'z'] <> ['_'] <> ['0'..'9']))
+    return (NonSpace (pack (c1 : rest)))
 
 instance Arbitrary National where
   arbitrary = elements [NotNational, National]
@@ -193,7 +194,7 @@ instance Arbitrary National where
 charProp national m charset collation =
   let natS = case national of
         NotNational -> ""
-        National -> "NATIONAL"
+        National -> "NATIONAL "
       mS = case m of
         Nothing -> ""
         Just i -> "(" <> pack (show i) <> ")"
@@ -212,6 +213,6 @@ charProp national m charset collation =
       collationR = case collation of
         Nothing -> Nothing
         Just (NonSpace c) -> Just c
-      t = natS <> " " <> "CHAR" <> mS <> " " <> charsetS <> " " <> collationS
+      t = natS <> "CHAR" <> mS <> " " <> charsetS <> " " <> collationS
   in
     parse t == MyChar national mR charsetR collationR

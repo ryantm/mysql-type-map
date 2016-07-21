@@ -10,6 +10,7 @@ module Lib
 
 import Data.Text
 import Text.Parser.Token
+import Text.Parser.Token.Style
 import Text.Parser.Combinators
 import Text.Parsec (runParserT)
 import Data.Functor.Identity (runIdentity)
@@ -71,6 +72,7 @@ parseTypes =
   <|> tryEof timestamp
   <|> tryEof time
   <|> tryEof year
+  <|> tryEof char
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -187,3 +189,12 @@ fspType n c d =
   c <$> (
   textSymbol n *>
   option d (parens integer))
+
+char :: (TokenParsing f, Monad f) => f ColumnType
+char = MyChar <$>
+  option NotNational (textSymbol "NATIONAL" *> pure National) <*
+  textSymbol "CHAR" <*>
+  option 1 (parens integer) <*>
+  option Nothing (Just <$>
+                   (try (textSymbol "CHARACTER SET") *> ident emptyIdents)) <*>
+  option Nothing (Just <$> (try (textSymbol "COLLATE") *> ident emptyIdents))
