@@ -93,7 +93,10 @@ stringTests = testGroup "String" [
     charProp,
   testProperty
     "[NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE collation_name]"
-    varcharProp
+    varcharProp,
+  testProperty "BINARY(M)" $
+     \ m ->
+       parse ("BINARY(" <> pack (show m) <> ")") == Binary m
   ]
 
 mSZ n c m s z =

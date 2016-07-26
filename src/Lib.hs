@@ -42,6 +42,7 @@ data ColumnType =
   | Year Integer
   | MyChar National Integer (Maybe Text) (Maybe Text)
   | VarChar National Integer (Maybe Text) (Maybe Text)
+  | Binary Integer
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -75,6 +76,7 @@ parseTypes =
   <|> tryEof year
   <|> tryEof char
   <|> tryEof varchar
+  <|> tryEof binary
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -209,3 +211,6 @@ varchar = VarChar <$>
   option Nothing (Just <$>
                    (try (textSymbol "CHARACTER SET") *> ident emptyIdents)) <*>
   option Nothing (Just <$> (try (textSymbol "COLLATE") *> ident emptyIdents))
+
+binary :: TokenParsing f => f ColumnType
+binary = Binary <$> (textSymbol "BINARY" *> parens integer)
