@@ -43,6 +43,7 @@ data ColumnType =
   | MyChar National Integer (Maybe Text) (Maybe Text)
   | VarChar National Integer (Maybe Text) (Maybe Text)
   | Binary Integer
+  | VarBinary Integer
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -77,6 +78,7 @@ parseTypes =
   <|> tryEof char
   <|> tryEof varchar
   <|> tryEof binary
+  <|> tryEof varbinary
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -214,3 +216,6 @@ varchar = VarChar <$>
 
 binary :: TokenParsing f => f ColumnType
 binary = Binary <$> (textSymbol "BINARY" *> parens integer)
+
+varbinary :: TokenParsing f => f ColumnType
+varbinary = VarBinary <$> (textSymbol "VARBINARY" *> parens integer)

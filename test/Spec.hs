@@ -88,15 +88,18 @@ dateTimeTests = testGroup "Date/Time" [
 
 stringTests :: TestTree
 stringTests = testGroup "String" [
-  testProperty
-    "[NATIONAL] CHAR[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]"
-    charProp,
-  testProperty
-    "[NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE collation_name]"
-    varcharProp,
-  testProperty "BINARY(M)" $
-     \ m ->
-       parse ("BINARY(" <> pack (show m) <> ")") == Binary m
+    testProperty
+      "[NATIONAL] CHAR[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]"
+      charProp
+  , testProperty
+      "[NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE collation_name]"
+      varcharProp
+  , testProperty "BINARY(M)" $
+      \ m ->
+        parse ("BINARY(" <> pack (show m) <> ")") == Binary m
+  ,  testProperty "VARBINARY(M)" $
+       \ m ->
+       parse ("VARBINARY(" <> pack (show m) <> ")") == VarBinary m
   ]
 
 mSZ n c m s z =
@@ -227,7 +230,6 @@ varcharProp national m charset collation =
         NotNational -> ""
         National -> "NATIONAL "
       mS = "(" <> pack (show m) <> ")"
-      mR = m
       charsetS = case charset of
         Nothing -> ""
         Just (NonSpace c) -> "CHARACTER SET " <> c
@@ -242,4 +244,4 @@ varcharProp national m charset collation =
         Just (NonSpace c) -> Just c
       t = natS <> "VARCHAR" <> mS <> " " <> charsetS <> " " <> collationS
   in
-    parse t == VarChar national mR charsetR collationR
+    parse t == VarChar national m charsetR collationR
