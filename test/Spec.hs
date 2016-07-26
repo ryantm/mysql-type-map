@@ -100,6 +100,7 @@ stringTests = testGroup "String" [
   ,  testProperty "VARBINARY(M)" $
        \ m ->
        parse ("VARBINARY(" <> pack (show m) <> ")") == VarBinary m
+  ,  testCase "TINYBLOB" $ parse "TINYBLOB" @?= TinyBlob
   ]
 
 mSZ n c m s z =
