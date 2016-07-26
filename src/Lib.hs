@@ -41,6 +41,7 @@ data ColumnType =
   | Time Integer
   | Year Integer
   | MyChar National Integer (Maybe Text) (Maybe Text)
+  | VarChar National Integer (Maybe Text) (Maybe Text)
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -73,6 +74,7 @@ parseTypes =
   <|> tryEof time
   <|> tryEof year
   <|> tryEof char
+  <|> tryEof varchar
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -195,6 +197,15 @@ char = MyChar <$>
   option NotNational (textSymbol "NATIONAL" *> pure National) <*
   textSymbol "CHAR" <*>
   option 1 (parens integer) <*>
+  option Nothing (Just <$>
+                   (try (textSymbol "CHARACTER SET") *> ident emptyIdents)) <*>
+  option Nothing (Just <$> (try (textSymbol "COLLATE") *> ident emptyIdents))
+
+varchar :: (TokenParsing f, Monad f) => f ColumnType
+varchar = VarChar <$>
+  option NotNational (textSymbol "NATIONAL" *> pure National) <*
+  textSymbol "VARCHAR" <*>
+  parens integer <*>
   option Nothing (Just <$>
                    (try (textSymbol "CHARACTER SET") *> ident emptyIdents)) <*>
   option Nothing (Just <$> (try (textSymbol "COLLATE") *> ident emptyIdents))

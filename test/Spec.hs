@@ -90,7 +90,10 @@ stringTests :: TestTree
 stringTests = testGroup "String" [
   testProperty
     "[NATIONAL] CHAR[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]"
-    charProp
+    charProp,
+  testProperty
+    "[NATIONAL] VARCHAR(M) [CHARACTER SET charset_name] [COLLATE collation_name]"
+    varcharProp
   ]
 
 mSZ n c m s z =
@@ -215,3 +218,25 @@ charProp national m charset collation =
       t = natS <> "CHAR" <> mS <> " " <> charsetS <> " " <> collationS
   in
     parse t == MyChar national mR charsetR collationR
+
+varcharProp national m charset collation =
+  let natS = case national of
+        NotNational -> ""
+        National -> "NATIONAL "
+      mS = "(" <> pack (show m) <> ")"
+      mR = m
+      charsetS = case charset of
+        Nothing -> ""
+        Just (NonSpace c) -> "CHARACTER SET " <> c
+      charsetR = case charset of
+        Nothing -> Nothing
+        Just (NonSpace c) -> Just c
+      collationS = case collation of
+        Nothing -> ""
+        Just (NonSpace c) -> "COLLATE " <> c
+      collationR = case collation of
+        Nothing -> Nothing
+        Just (NonSpace c) -> Just c
+      t = natS <> "VARCHAR" <> mS <> " " <> charsetS <> " " <> collationS
+  in
+    parse t == VarChar national mR charsetR collationR
