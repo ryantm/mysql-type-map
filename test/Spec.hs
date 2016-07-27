@@ -101,6 +101,9 @@ stringTests = testGroup "String" [
        \ m ->
        parse ("VARBINARY(" <> pack (show m) <> ")") == VarBinary m
   ,  testCase "TINYBLOB" $ parse "TINYBLOB" @?= TinyBlob
+  , testProperty
+    "TEXT[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]"
+    textProp
   ]
 
 mSZ n c m s z =
@@ -246,3 +249,23 @@ varcharProp national m charset collation =
       t = natS <> "VARCHAR" <> mS <> " " <> charsetS <> " " <> collationS
   in
     parse t == VarChar national m charsetR collationR
+
+textProp m charset collation =
+  let mS = case m of
+        Nothing -> ""
+        Just i -> "(" <> pack (show i) <> ")"
+      charsetS = case charset of
+        Nothing -> ""
+        Just (NonSpace c) -> "CHARACTER SET " <> c
+      charsetR = case charset of
+        Nothing -> Nothing
+        Just (NonSpace c) -> Just c
+      collationS = case collation of
+        Nothing -> ""
+        Just (NonSpace c) -> "COLLATE " <> c
+      collationR = case collation of
+        Nothing -> Nothing
+        Just (NonSpace c) -> Just c
+      t = "TEXT" <> mS <> " " <> charsetS <> " " <> collationS
+  in
+    parse t == MyText m charsetR collationR
