@@ -46,6 +46,7 @@ data ColumnType =
   | VarBinary Integer
   | TinyBlob
   | MyText (Maybe Integer) (Maybe Text) (Maybe Text)
+  | MediumBlob
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -83,6 +84,7 @@ parseTypes =
   <|> tryEof varbinary
   <|> tryEof tinyBlob
   <|> tryEof myText
+  <|> tryEof mediumBlob
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -234,3 +236,6 @@ myText = MyText <$>
   option Nothing (Just <$>
                    (try (textSymbol "CHARACTER SET") *> ident emptyIdents)) <*>
   option Nothing (Just <$> (try (textSymbol "COLLATE") *> ident emptyIdents))
+
+mediumBlob :: TokenParsing f => f ColumnType
+mediumBlob = textSymbol "MEDIUMBLOB" *> pure MediumBlob

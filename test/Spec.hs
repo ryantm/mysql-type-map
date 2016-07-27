@@ -104,6 +104,7 @@ stringTests = testGroup "String" [
   , testProperty
     "TEXT[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]"
     textProp
+  ,  testCase "MEDIUMBLOB" $ parse "MEDIUMBLOB" @?= MediumBlob
   ]
 
 mSZ n c m s z =
