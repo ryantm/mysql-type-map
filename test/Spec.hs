@@ -105,6 +105,9 @@ stringTests = testGroup "String" [
     "TEXT[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]"
     textProp
   ,  testCase "MEDIUMBLOB" $ parse "MEDIUMBLOB" @?= MediumBlob
+  , testProperty
+    "MEDIUMTEXT [CHARACTER SET charset_name] [COLLATE collation_name]"
+    mediumTextProp
   ]
 
 mSZ n c m s z =
@@ -270,3 +273,20 @@ textProp m charset collation =
       t = "TEXT" <> mS <> " " <> charsetS <> " " <> collationS
   in
     parse t == MyText m charsetR collationR
+
+mediumTextProp charset collation =
+  let charsetS = case charset of
+        Nothing -> ""
+        Just (NonSpace c) -> "CHARACTER SET " <> c
+      charsetR = case charset of
+        Nothing -> Nothing
+        Just (NonSpace c) -> Just c
+      collationS = case collation of
+        Nothing -> ""
+        Just (NonSpace c) -> "COLLATE " <> c
+      collationR = case collation of
+        Nothing -> Nothing
+        Just (NonSpace c) -> Just c
+      t = "MEDIUMTEXT" <> " " <> charsetS <> " " <> collationS
+  in
+    parse t == MediumText charsetR collationR
