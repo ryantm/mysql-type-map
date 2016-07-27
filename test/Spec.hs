@@ -108,6 +108,7 @@ stringTests = testGroup "String" [
   , testProperty
     "MEDIUMTEXT [CHARACTER SET charset_name] [COLLATE collation_name]"
     mediumTextProp
+  ,  testCase "LONGBLOB" $ parse "LONGBLOB" @?= LongBlob
   ]
 
 mSZ n c m s z =

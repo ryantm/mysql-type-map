@@ -48,6 +48,7 @@ data ColumnType =
   | MyText (Maybe Integer) (Maybe Text) (Maybe Text)
   | MediumBlob
   | MediumText (Maybe Text) (Maybe Text)
+  | LongBlob
   deriving (Eq, Show)
 
 parse :: Text -> ColumnType
@@ -87,6 +88,7 @@ parseTypes =
   <|> tryEof myText
   <|> tryEof mediumBlob
   <|> tryEof mediumText
+  <|> tryEof longBlob
 
 bit :: TokenParsing m => m ColumnType
 bit =
@@ -248,3 +250,6 @@ mediumText = MediumText <$>
   option Nothing (Just <$>
                    (try (textSymbol "CHARACTER SET") *> ident emptyIdents))) <*>
   option Nothing (Just <$> (try (textSymbol "COLLATE") *> ident emptyIdents))
+
+longBlob :: TokenParsing f => f ColumnType
+longBlob = textSymbol "LONGBLOB" *> pure LongBlob
